@@ -2,14 +2,19 @@ const express = require("express");
 const router = express.Router();
 const Room = require("../models/Room");
 const multer = require("multer");
-const path = require("path");
 const { v4: uuidv4 } = require("uuid");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    cb(null, uuidv4() + path.extname(file.originalname));
-  },
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: { folder: "campfire", allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"] },
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
@@ -84,7 +89,7 @@ router.get("/:code", async (req, res) => {
 // Upload image
 router.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, error: "No file" });
-  res.json({ success: true, url: `/uploads/${req.file.filename}` });
+  res.json({ success: true, url: req.file.path });
 });
 
 module.exports = router;
