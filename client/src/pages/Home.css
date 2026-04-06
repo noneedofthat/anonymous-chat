@@ -1,0 +1,215 @@
+.home {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 80%, rgba(255, 107, 43, 0.08) 0%, transparent 60%);
+}
+
+.ember {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent);
+  filter: blur(2px);
+  opacity: 0.6;
+  animation: float linear infinite;
+}
+
+.e1 { width: 4px; height: 4px; left: 30%; bottom: 0; animation-duration: 4s; animation-delay: 0s; }
+.e2 { width: 3px; height: 3px; left: 50%; bottom: 0; animation-duration: 5s; animation-delay: 1s; }
+.e3 { width: 5px; height: 5px; left: 65%; bottom: 0; animation-duration: 3.5s; animation-delay: 0.5s; }
+.e4 { width: 2px; height: 2px; left: 45%; bottom: 0; animation-duration: 6s; animation-delay: 2s; }
+.e5 { width: 4px; height: 4px; left: 55%; bottom: 0; animation-duration: 4.5s; animation-delay: 1.5s; }
+
+@keyframes float {
+  0% { transform: translateY(0) translateX(0); opacity: 0.8; }
+  50% { transform: translateY(-40vh) translateX(20px); opacity: 0.5; }
+  100% { transform: translateY(-80vh) translateX(-10px); opacity: 0; }
+}
+
+.home-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+}
+
+.logo {
+  text-align: center;
+}
+
+.logo-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 20px rgba(255, 107, 43, 0.6));
+}
+
+.logo h1 {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--text);
+}
+
+.tagline {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+.card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  flex: 1;
+  padding: 14px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  margin-bottom: -1px;
+}
+
+.tab:hover:not(.active) {
+  color: var(--text);
+}
+
+.fields {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.code-input {
+  letter-spacing: 0.1em;
+  font-size: 14px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.select {
+  cursor: pointer;
+}
+
+.select-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.select-row label {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.select-row .input {
+  flex: 1;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.checkbox-row input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: 4px;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 12px;
+  text-align: center;
+}
+
+.footer-note {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.03em;
+}
