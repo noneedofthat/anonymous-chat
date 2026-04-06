@@ -68,6 +68,7 @@ When everyone leaves, the room is gone. No accounts. No history. No trace.
 
 **Database**
 - MongoDB Atlas — Cloud NoSQL database with TTL indexes for auto-expiring rooms
+- Cloudinary — Cloud image storage for shared images
 
 ---
 
@@ -152,12 +153,16 @@ Client runs on `http://localhost:5173`, server on `http://localhost:5000`.
 | MongoDB Atlas | Database | 512MB free |
 | Railway | Backend hosting | $5 credit/month |
 | Vercel | Frontend hosting | Unlimited free |
+| Cloudinary | Image storage | 25GB free |
 
 **Railway (Backend) environment variables:**
 ```
 PORT=5000
 MONGO_URI=your_atlas_connection_string
 CLIENT_URL=https://your-app.vercel.app
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 **Vercel (Frontend) environment variables:**
@@ -191,7 +196,20 @@ VITE_SERVER_URL=https://your-backend.up.railway.app
 
 ## Screenshots
 
-> Add screenshots here after deployment
+| Join Room | Create Room |
+|---|---|
+| ![Join Room](screenshots/join-room.png) | ![Create Room](screenshots/create-room.png) |
+
+| Poll | Image & Reactions |
+|---|---|
+| ![Poll](screenshots/poll.png) | ![Image and Reactions](screenshots/image-reactions.png) |
+
+<div align="center">
+
+![Members](screenshots/members.png)
+*Members list view*
+
+</div>
 
 ---
 
