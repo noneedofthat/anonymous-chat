@@ -367,3 +367,62 @@
   border-left: 3px solid var(--accent);
   padding-left: 8px;
 }
+
+/* File message styling */
+.msg-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.15s;
+  max-width: 300px;
+}
+
+.bubble-me .msg-file {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.msg-file:hover {
+  background: var(--surface2);
+  border-color: var(--accent);
+}
+
+.bubble-me .msg-file:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.msg-file svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.bubble-me .file-size {
+  color: rgba(255, 255, 255, 0.7);
+}

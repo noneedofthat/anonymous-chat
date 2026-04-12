@@ -4,8 +4,10 @@ const messageSchema = new mongoose.Schema({
   id: String,
   sender: String,
   text: String,
-  type: { type: String, default: "text" },
+  type: { type: String, default: "text" }, // text, image, file
   fileUrl: String,
+  fileName: String,
+  fileType: String,
   pollId: String,
   replyTo: { type: mongoose.Schema.Types.Mixed, default: null },
   reactions: { type: Map, of: [String], default: {} },

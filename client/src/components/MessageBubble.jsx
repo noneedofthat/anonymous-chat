@@ -195,23 +195,33 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
         )}
 
         <div className={`bubble ${isMe ? "bubble-me" : "bubble-other"}`}>
-          {msg.type === "image"
-            ? <img src={msg.fileUrl} alt="shared" className="msg-image" />
-            : (
-              <div className="msg-text">
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]} 
-                  rehypePlugins={[rehypeRaw, rehypeHighlight]}
-                  components={{
-                    code: ({node, inline, ...props}) => 
-                      inline ? <code className="inline-code" {...props} /> : <code {...props} />
-                  }}
-                >
-                  {msg.text}
-                </ReactMarkdown>
+          {msg.type === "image" ? (
+            <img src={msg.fileUrl} alt="shared" className="msg-image" />
+          ) : msg.type === "file" ? (
+            <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" className="msg-file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+                <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                <polyline points="13 2 13 9 20 9"/>
+              </svg>
+              <div className="file-info">
+                <span className="file-name">{msg.fileName}</span>
+                <span className="file-size">Click to download</span>
               </div>
-            )
-          }
+            </a>
+          ) : (
+            <div className="msg-text">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]} 
+                rehypePlugins={[rehypeRaw, rehypeHighlight]}
+                components={{
+                  code: ({node, inline, ...props}) => 
+                    inline ? <code className="inline-code" {...props} /> : <code {...props} />
+                }}
+              >
+                {msg.text}
+              </ReactMarkdown>
+            </div>
+          )}
         </div>
       </div>
 

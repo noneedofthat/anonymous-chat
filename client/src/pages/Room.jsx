@@ -350,12 +350,33 @@ export default function Room() {
     if (files.length === 0) return;
     
     const imageFiles = files.filter(f => f.type.startsWith("image/"));
-    if (imageFiles.length === 0) {
-      addToast("Please select image files only", "error");
-      return;
+    const otherFiles = files.filter(f => !f.type.startsWith("image/"));
+    
+    // Handle images with preview
+    if (imageFiles.length > 0) {
+      setPreviewFiles(imageFiles);
     }
     
-    setPreviewFiles(imageFiles);
+    // Handle other files directly
+    for (const file of otherFiles) {
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await axios.post("/api/rooms/upload", formData);
+        if (res.data.success) {
+          socket.emit("send_file", { 
+            code, 
+            sender: myName, 
+            fileUrl: res.data.url,
+            fileName: res.data.filename,
+            fileType: res.data.type
+          });
+        }
+      } catch {
+        addToast(`Failed to upload ${file.name}`, "error");
+      }
+    }
+    
     e.target.value = "";
   };
 
@@ -474,6 +495,72 @@ export default function Room() {
     }
   };
 
+  const exportAsJSON = () => {
+    const exportData = {
+      room: {
+        name: room.name,
+        code: room.code,
+        host: room.host,
+        createdAt: room.createdAt,
+        expiresAt: room.expiresAt
+      },
+      messages: messages.map(m => ({
+        id: m.id,
+        sender: m.sender,
+        text: m.text,
+        type: m.type,
+        timestamp: m.timestamp,
+        edited: m.edited
+      })),
+      polls: polls,
+      exportedAt: new Date().toISOString(),
+      exportedBy: myName
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `campfire-${room.code}-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    addToast("Chat exported as JSON", "success");
+  };
+
+  const exportAsTXT = () => {
+    let txt = `Campfire Chat Export\n`;
+    txt += `Room: ${room.name} (${room.code})\n`;
+    txt += `Host: ${room.host}\n`;
+    txt += `Created: ${new Date(room.createdAt).toLocaleString()}\n`;
+    txt += `Exported: ${new Date().toLocaleString()} by ${myName}\n`;
+    txt += `\n${"=".repeat(60)}\n\n`;
+
+    messages.forEach(msg => {
+      const time = new Date(msg.timestamp).toLocaleTimeString();
+      if (msg.type === "text") {
+        txt += `[${time}] ${msg.sender}: ${msg.text}${msg.edited ? " (edited)" : ""}\n`;
+      } else if (msg.type === "image") {
+        txt += `[${time}] ${msg.sender}: [Image: ${msg.fileUrl}]\n`;
+      } else if (msg.type === "file") {
+        txt += `[${time}] ${msg.sender}: [File: ${msg.fileName}]\n`;
+      } else if (msg.type === "poll") {
+        const poll = polls.find(p => p.id === msg.pollId);
+        if (poll) {
+          txt += `[${time}] ${msg.sender}: [Poll: ${poll.question}]\n`;
+        }
+      }
+    });
+
+    const blob = new Blob([txt], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `campfire-${room.code}-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    addToast("Chat exported as TXT", "success");
+  };
+
   const handleReply = (msg) => {
     setReplyTo({ id: msg.id, sender: msg.sender, text: msg.text });
     textareaRef.current?.focus();
@@ -589,6 +676,14 @@ export default function Room() {
           <button className="share-link-btn" onClick={copyLink}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             Share link
+          </button>
+          <button className="share-link-btn" onClick={exportAsJSON}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export JSON
+          </button>
+          <button className="share-link-btn" onClick={exportAsTXT}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export TXT
           </button>
         </div>
       )}
@@ -709,10 +804,10 @@ export default function Room() {
           </div>
         )}
         <div className="input-row">
-          <button className="icon-btn" onClick={() => fileInputRef.current.click()} title="Share image">
+          <button className="icon-btn" onClick={() => fileInputRef.current.click()} title="Share files">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </button>
-          <input type="file" ref={fileInputRef} style={{ display:"none" }} accept="image/*" multiple onChange={handleFileUpload} />
+          <input type="file" ref={fileInputRef} style={{ display:"none" }} accept="image/*,.pdf,.doc,.docx,.txt,.zip" multiple onChange={handleFileUpload} />
           <button className="icon-btn" onClick={() => setShowPollModal(true)} title="Create poll">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </button>

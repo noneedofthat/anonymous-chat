@@ -87,6 +87,12 @@ module.exports = (io) => {
       io.to(code).emit("new_message", msg);
     });
 
+    socket.on("send_file", async ({ code, sender, fileUrl, fileName, fileType }) => {
+      const msg = { id: uuidv4(), sender, text: "", type: "file", fileUrl, fileName, fileType, reactions: {}, timestamp: new Date() };
+      await Room.findOneAndUpdate({ code }, { $push: { messages: msg } });
+      io.to(code).emit("new_message", msg);
+    });
+
     socket.on("delete_message", async ({ code, messageId, sender }) => {
       const room = await Room.findOne({ code });
       if (!room) return;

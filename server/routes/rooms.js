@@ -14,9 +14,13 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: { folder: "campfire", allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"] },
+  params: { 
+    folder: "campfire", 
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "pdf", "doc", "docx", "txt", "zip"],
+    resource_type: "auto"
+  },
 });
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
 
 // Generate unique 6-char room code
 function generateCode() {
@@ -86,10 +90,15 @@ router.get("/:code", async (req, res) => {
   }
 });
 
-// Upload image
+// Upload image or file
 router.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, error: "No file" });
-  res.json({ success: true, url: req.file.path });
+  res.json({ 
+    success: true, 
+    url: req.file.path,
+    filename: req.file.originalname,
+    type: req.file.mimetype
+  });
 });
 
 module.exports = router;
