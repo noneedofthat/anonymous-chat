@@ -1,4 +1,9 @@
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
+import EditModal from "./EditModal";
 import "./MessageBubble.css";
 
 const REACTIONS = [
@@ -11,6 +16,13 @@ const REACTIONS = [
 ];
 
 const LABELS = Object.fromEntries(REACTIONS.map(r => [r.emoji, r.label]));
+
+const EditIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+);
 
 const TrashIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
@@ -31,8 +43,9 @@ const CopyIcon = () => (
   </svg>
 );
 
-export default function MessageBubble({ msg, myName, onReact, onDelete, onReply, polls }) {
+export default function MessageBubble({ msg, myName, onReact, onDelete, onReply, onEdit, polls }) {
   const [showActions, setShowActions] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const isMe = msg.sender === myName;
 
   const totalReactions = msg.reactions
@@ -53,6 +66,11 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
       targetMsg.style.animation = "highlightFlash 1s ease";
       setTimeout(() => { targetMsg.style.animation = ""; }, 1000);
     }
+  };
+
+  const handleEdit = (newText) => {
+    onEdit(msg.id, newText);
+    setShowEditModal(false);
   };
 
   // Inline poll
@@ -137,6 +155,11 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
                 <CopyIcon />
               </button>
             )}
+            {isMe && msg.type === "text" && (
+              <button className="action-icon" title="Edit" onClick={() => setShowEditModal(true)}>
+                <EditIcon />
+              </button>
+            )}
             {isMe && (
               <button className="action-icon action-delete" title="Delete" onClick={() => onDelete(msg.id)}>
                 <TrashIcon />
@@ -148,10 +171,27 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
         <div className={`bubble ${isMe ? "bubble-me" : "bubble-other"}`}>
           {msg.type === "image"
             ? <img src={msg.fileUrl} alt="shared" className="msg-image" />
-            : <p className="msg-text">{msg.text}</p>
+            : (
+              <div className="msg-text">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]} 
+                  rehypePlugins={[rehypeHighlight]}
+                  components={{
+                    code: ({node, inline, ...props}) => 
+                      inline ? <code className="inline-code" {...props} /> : <code {...props} />
+                  }}
+                >
+                  {msg.text}
+                </ReactMarkdown>
+              </div>
+            )
           }
         </div>
       </div>
+
+      {msg.edited && (
+        <span className="edited-tag">edited</span>
+      )}
 
       {totalReactions.length > 0 && (
         <div className="reactions-bar">
@@ -167,6 +207,14 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
       )}
 
       <span className="msg-time">{formatTime(msg.timestamp)}</span>
+      
+      {showEditModal && (
+        <EditModal 
+          message={msg} 
+          onSave={handleEdit} 
+          onCancel={() => setShowEditModal(false)} 
+        />
+      )}
     </div>
   );
 }

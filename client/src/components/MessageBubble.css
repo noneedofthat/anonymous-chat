@@ -267,3 +267,80 @@
   0%, 100% { background: transparent; }
   50% { background: rgba(255, 107, 43, 0.15); }
 }
+
+/* Markdown styling */
+.msg-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.msg-text p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.msg-text p + p {
+  margin-top: 8px;
+}
+
+.msg-text strong {
+  font-weight: 600;
+}
+
+.msg-text em {
+  font-style: italic;
+}
+
+.msg-text code.inline-code {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+}
+
+.bubble-me .msg-text code.inline-code {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.msg-text pre {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0 0 0;
+}
+
+.bubble-me .msg-text pre {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.msg-text pre code {
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+}
+
+.msg-text ul, .msg-text ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.msg-text li {
+  margin: 2px 0;
+}
+
+.msg-text a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.edited-tag {
+  font-size: 10px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2px;
+  padding: 0 4px;
+}

@@ -10,6 +10,7 @@ import PollModal from "../components/PollModal";
 import Toast from "../components/Toast";
 import TypingIndicator from "../components/TypingIndicator";
 import ImagePreview from "../components/ImagePreview";
+import SearchBar from "../components/SearchBar";
 import "./Room.css";
 
 // Subtle notification sound using Web Audio API
@@ -50,6 +51,7 @@ export default function Room() {
   const [shutdown, setShutdown] = useState(null);
   const [previewFiles, setPreviewFiles] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   const messagesEndRef = useRef(null);
   const messagesAreaRef = useRef(null);
@@ -131,6 +133,12 @@ export default function Room() {
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
     });
 
+    socket.on("message_edited", ({ messageId, newText, editedAt }) => {
+      setMessages((prev) => prev.map((m) => 
+        m.id === messageId ? { ...m, text: newText, edited: true, editedAt } : m
+      ));
+    });
+
     socket.on("user_joined", ({ name, members }) => {
       if (members) setMembers(members);
       if (name !== myName) addToast(`${name} joined the campfire`, "join");
@@ -161,7 +169,7 @@ export default function Room() {
     return () => {
       socket.emit("leave_room", { code, name: myName });
       document.title = docTitleRef.current;
-      ["room_history","room_polls","members_update","room_shutdown","new_message","message_deleted","user_joined","user_left","reaction_update","new_poll","poll_update","typing_update"].forEach(e => socket.off(e));
+      ["room_history","room_polls","members_update","room_shutdown","new_message","message_deleted","message_edited","user_joined","user_left","reaction_update","new_poll","poll_update","typing_update"].forEach(e => socket.off(e));
     };
   }, [code]);
 
@@ -180,6 +188,18 @@ export default function Room() {
     const onFocus = () => { setUnread(0); document.title = "Campfire"; };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
+  // Keyboard shortcut for search (Ctrl+F)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Countdown timer
@@ -329,6 +349,21 @@ export default function Room() {
     addToast("Message deleted", "success");
   };
 
+  const handleEdit = async (messageId, newText) => {
+    if (!cryptoKeyRef.current) return;
+    const encrypted = await encryptText(cryptoKeyRef.current, newText);
+    socket.emit("edit_message", { code, messageId, sender: myName, newText: encrypted });
+  };
+
+  const handleSearchResult = (messageId) => {
+    const targetMsg = document.querySelector(`[data-msg-id="${messageId}"]`);
+    if (targetMsg) {
+      targetMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetMsg.style.animation = "highlightFlash 1s ease";
+      setTimeout(() => { targetMsg.style.animation = ""; }, 1000);
+    }
+  };
+
   const handleReply = (msg) => {
     setReplyTo({ id: msg.id, sender: msg.sender, text: msg.text });
     textareaRef.current?.focus();
@@ -412,6 +447,12 @@ export default function Room() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             E2E
           </div>
+          <button className="icon-btn" onClick={() => setShowSearch(!showSearch)} title="Search (Ctrl+F)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          </button>
           <button className="icon-btn" onClick={() => { setShowSidebar(!showSidebar); setShowRoomInfo(false); }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
             {members.length}
@@ -442,6 +483,14 @@ export default function Room() {
         </div>
       )}
 
+      {showSearch && (
+        <SearchBar 
+          messages={messages} 
+          onResultClick={handleSearchResult} 
+          onClose={() => setShowSearch(false)} 
+        />
+      )}
+
       <div className="room-body">
         <main className="messages-area" ref={messagesAreaRef} onScroll={handleScroll}>
           {messages.length === 0 && (
@@ -458,6 +507,7 @@ export default function Room() {
               onReact={handleBubbleAction}
               onDelete={handleDelete}
               onReply={handleReply}
+              onEdit={handleEdit}
               polls={polls}
             />
           ))}

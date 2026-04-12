@@ -96,6 +96,26 @@ module.exports = (io) => {
       io.to(code).emit("message_deleted", { messageId });
     });
 
+    socket.on("edit_message", async ({ code, messageId, sender, newText }) => {
+      const room = await Room.findOne({ code });
+      if (!room) return;
+      const msg = room.messages.find((m) => m.id === messageId);
+      if (!msg || msg.sender !== sender || msg.type !== "text") return;
+      
+      await Room.findOneAndUpdate(
+        { code, "messages.id": messageId },
+        { 
+          $set: { 
+            "messages.$.text": newText,
+            "messages.$.edited": true,
+            "messages.$.editedAt": new Date()
+          }
+        }
+      );
+      
+      io.to(code).emit("message_edited", { messageId, newText, editedAt: new Date() });
+    });
+
     socket.on("react", async ({ code, messageId, emoji, name }) => {
       const room = await Room.findOne({ code });
       if (!room) return;

@@ -10,6 +10,8 @@ const messageSchema = new mongoose.Schema({
   replyTo: { type: mongoose.Schema.Types.Mixed, default: null },
   reactions: { type: Map, of: [String], default: {} },
   timestamp: { type: Date, default: Date.now },
+  edited: { type: Boolean, default: false },
+  editedAt: { type: Date, default: null },
 });
 
 const pollSchema = new mongoose.Schema({
