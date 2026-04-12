@@ -424,3 +424,40 @@
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
 }
+
+/* Drag and drop overlay */
+.drag-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.drag-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--accent);
+  animation: dragPulse 1.5s ease-in-out infinite;
+}
+
+.drag-content svg {
+  opacity: 0.9;
+}
+
+.drag-content p {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+@keyframes dragPulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; }
+}

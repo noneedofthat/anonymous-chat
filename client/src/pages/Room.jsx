@@ -9,6 +9,7 @@ import PollCard from "../components/PollCard";
 import PollModal from "../components/PollModal";
 import Toast from "../components/Toast";
 import TypingIndicator from "../components/TypingIndicator";
+import ImagePreview from "../components/ImagePreview";
 import "./Room.css";
 
 // Subtle notification sound using Web Audio API
@@ -47,6 +48,8 @@ export default function Room() {
   const [atBottom, setAtBottom] = useState(true);
   const [replyTo, setReplyTo] = useState(null);
   const [shutdown, setShutdown] = useState(null);
+  const [previewFiles, setPreviewFiles] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const messagesEndRef = useRef(null);
   const messagesAreaRef = useRef(null);
@@ -229,16 +232,89 @@ export default function Room() {
   };
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const res = await axios.post("/api/rooms/upload", formData);
-      if (res.data.success) socket.emit("send_image", { code, sender: myName, fileUrl: res.data.url });
-    } catch { addToast("Upload failed", "error"); }
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    const imageFiles = files.filter(f => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) {
+      addToast("Please select image files only", "error");
+      return;
+    }
+    
+    setPreviewFiles(imageFiles);
     e.target.value = "";
   };
+
+  const handleSendImages = async () => {
+    if (!previewFiles || previewFiles.length === 0) return;
+    
+    for (const file of previewFiles) {
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await axios.post("/api/rooms/upload", formData);
+        if (res.data.success) {
+          socket.emit("send_image", { code, sender: myName, fileUrl: res.data.url });
+        }
+      } catch {
+        addToast(`Failed to upload ${file.name}`, "error");
+      }
+    }
+    
+    setPreviewFiles(null);
+    addToast(`${previewFiles.length} image${previewFiles.length > 1 ? "s" : ""} sent`, "success");
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.target === e.currentTarget) setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(f => f.type.startsWith("image/"));
+    
+    if (imageFiles.length === 0) {
+      addToast("Please drop image files only", "error");
+      return;
+    }
+    
+    setPreviewFiles(imageFiles);
+  };
+
+  // Paste handler
+  const handlePaste = (e) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItems = items.filter(item => item.type.startsWith("image/"));
+    
+    if (imageItems.length === 0) return;
+    
+    e.preventDefault();
+    const files = imageItems.map(item => item.getAsFile()).filter(Boolean);
+    if (files.length > 0) setPreviewFiles(files);
+  };
+
+  useEffect(() => {
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, []);
 
   const handleReact = (messageId, emoji) => socket.emit("react", { code, messageId, emoji, name: myName });
   const handleVote = (pollId, optionIndex) => socket.emit("vote_poll", { code, pollId, optionIndex, name: myName });
@@ -294,8 +370,27 @@ export default function Room() {
   </div>;
 
   return (
-    <div className="room-layout">
+    <div 
+      className="room-layout"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <Toast toasts={toasts} removeToast={removeToast} />
+
+      {isDragging && (
+        <div className="drag-overlay">
+          <div className="drag-content">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="48" height="48">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <p>Drop images here</p>
+          </div>
+        </div>
+      )}
 
       <header className="room-header">
         <div className="header-left">
@@ -425,7 +520,7 @@ export default function Room() {
           <button className="icon-btn" onClick={() => fileInputRef.current.click()} title="Share image">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </button>
-          <input type="file" ref={fileInputRef} style={{ display:"none" }} accept="image/*" onChange={handleFileUpload} />
+          <input type="file" ref={fileInputRef} style={{ display:"none" }} accept="image/*" multiple onChange={handleFileUpload} />
           <button className="icon-btn" onClick={() => setShowPollModal(true)} title="Create poll">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </button>
@@ -451,6 +546,13 @@ export default function Room() {
       </footer>
 
       {showPollModal && <PollModal onClose={() => setShowPollModal(false)} onCreate={handleCreatePoll} />}
+      {previewFiles && (
+        <ImagePreview 
+          files={previewFiles} 
+          onSend={handleSendImages} 
+          onCancel={() => setPreviewFiles(null)} 
+        />
+      )}
     </div>
   );
 }
