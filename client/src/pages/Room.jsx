@@ -52,6 +52,7 @@ export default function Room() {
   const [previewFiles, setPreviewFiles] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [pinnedMessages, setPinnedMessages] = useState([]);
 
   const messagesEndRef = useRef(null);
   const messagesAreaRef = useRef(null);
@@ -96,6 +97,7 @@ export default function Room() {
       if (!res.data.success) { navigate("/"); return; }
       setRoom(res.data.room);
       setMembers(res.data.room.members || []);
+      setPinnedMessages(res.data.room.pinnedMessages || []);
     }).catch(() => navigate("/"));
 
     socket.emit("join_room", { code, name: myName });
@@ -140,6 +142,28 @@ export default function Room() {
       ));
     });
 
+    socket.on("message_pinned", ({ messageId }) => {
+      setPinnedMessages((prev) => [...prev, messageId]);
+    });
+
+    socket.on("message_unpinned", ({ messageId }) => {
+      setPinnedMessages((prev) => prev.filter(id => id !== messageId));
+    });
+
+    socket.on("user_kicked", ({ name, by }) => {
+      if (name === myName) {
+        setShutdown(`You were kicked by ${by}`);
+        setTimeout(() => navigate("/"), 3000);
+      } else {
+        addToast(`${name} was kicked by ${by}`, "leave");
+      }
+    });
+
+    socket.on("kicked", ({ by }) => {
+      setShutdown(`You were kicked by ${by}`);
+      setTimeout(() => navigate("/"), 3000);
+    });
+
     socket.on("user_joined", ({ name, members }) => {
       if (members) setMembers(members);
       if (name !== myName) addToast(`${name} joined the campfire`, "join");
@@ -170,7 +194,7 @@ export default function Room() {
     return () => {
       socket.emit("leave_room", { code, name: myName });
       document.title = docTitleRef.current;
-      ["room_history","room_polls","members_update","room_shutdown","new_message","message_deleted","message_edited","user_joined","user_left","reaction_update","new_poll","poll_update","typing_update"].forEach(e => socket.off(e));
+      ["room_history","room_polls","members_update","room_shutdown","new_message","message_deleted","message_edited","message_pinned","message_unpinned","user_joined","user_left","user_kicked","kicked","reaction_update","new_poll","poll_update","typing_update"].forEach(e => socket.off(e));
     };
   }, [code]);
 
@@ -233,6 +257,18 @@ export default function Room() {
       isTypingRef.current = false;
       socket.emit("typing", { code, name: myName, typing: false });
     }, 1500);
+  };
+
+  // Detect @mentions in text
+  const getMentions = (text) => {
+    const mentionRegex = /@(\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = mentionRegex.exec(text)) !== null) {
+      const name = match[1];
+      if (members.includes(name)) mentions.push(name);
+    }
+    return mentions;
   };
 
   const sendMessage = async () => {
@@ -362,6 +398,22 @@ export default function Room() {
       targetMsg.scrollIntoView({ behavior: "smooth", block: "center" });
       targetMsg.style.animation = "highlightFlash 1s ease";
       setTimeout(() => { targetMsg.style.animation = ""; }, 1000);
+    }
+  };
+
+  const handlePin = (messageId) => {
+    socket.emit("pin_message", { code, messageId, sender: myName });
+    addToast("Message pinned", "success");
+  };
+
+  const handleUnpin = (messageId) => {
+    socket.emit("unpin_message", { code, messageId, sender: myName });
+    addToast("Message unpinned", "success");
+  };
+
+  const handleKick = (targetName) => {
+    if (window.confirm(`Kick ${targetName} from the room?`)) {
+      socket.emit("kick_user", { code, targetName, sender: myName });
     }
   };
 
@@ -509,7 +561,11 @@ export default function Room() {
               onDelete={handleDelete}
               onReply={handleReply}
               onEdit={handleEdit}
+              onPin={handlePin}
+              onUnpin={handleUnpin}
               polls={polls}
+              isHost={room?.host === myName}
+              isPinned={pinnedMessages.includes(msg.id)}
             />
           ))}
           <TypingIndicator typers={typers.filter(t => t !== myName)} />
@@ -534,10 +590,21 @@ export default function Room() {
               <ul className="member-list">
                 {members.map((m) => (
                   <li key={m} className="member-item">
-                    <span className="member-dot" />
-                    {m}
-                    {m === room.host && <span className="host-badge">host</span>}
-                    {m === myName && <span className="you-badge">you</span>}
+                    <div className="member-info">
+                      <span className="member-dot" />
+                      {m}
+                      {m === room.host && <span className="host-badge">host</span>}
+                      {m === myName && <span className="you-badge">you</span>}
+                    </div>
+                    {room?.host === myName && m !== myName && (
+                      <button className="kick-btn" onClick={() => handleKick(m)} title="Kick user">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="15" y1="9" x2="9" y2="15"/>
+                          <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

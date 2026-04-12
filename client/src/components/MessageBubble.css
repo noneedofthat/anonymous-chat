@@ -348,3 +348,22 @@
   margin-top: 2px;
   padding: 0 4px;
 }
+
+/* Pinned message badge */
+.pinned-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  padding-left: 4px;
+}
+
+.bubble-wrap.pinned {
+  border-left: 3px solid var(--accent);
+  padding-left: 8px;
+}

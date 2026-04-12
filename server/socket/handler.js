@@ -156,6 +156,41 @@ module.exports = (io) => {
       socket.to(code).emit("typing_update", { name, typing });
     });
 
+    socket.on("pin_message", async ({ code, messageId, sender }) => {
+      const room = await Room.findOne({ code });
+      if (!room || room.host !== sender) return;
+      
+      if (!room.pinnedMessages.includes(messageId)) {
+        await Room.findOneAndUpdate({ code }, { $addToSet: { pinnedMessages: messageId } });
+        io.to(code).emit("message_pinned", { messageId });
+      }
+    });
+
+    socket.on("unpin_message", async ({ code, messageId, sender }) => {
+      const room = await Room.findOne({ code });
+      if (!room || room.host !== sender) return;
+      
+      await Room.findOneAndUpdate({ code }, { $pull: { pinnedMessages: messageId } });
+      io.to(code).emit("message_unpinned", { messageId });
+    });
+
+    socket.on("kick_user", async ({ code, targetName, sender }) => {
+      const room = await Room.findOne({ code });
+      if (!room || room.host !== sender || targetName === sender) return;
+      
+      await Room.findOneAndUpdate({ code }, { $pull: { members: targetName } });
+      io.to(code).emit("user_kicked", { name: targetName, by: sender });
+      
+      // Find and disconnect the kicked user's socket
+      const sockets = await io.in(code).fetchSockets();
+      for (const s of sockets) {
+        if (s.data.name === targetName) {
+          s.emit("kicked", { by: sender });
+          s.leave(code);
+        }
+      }
+    });
+
     socket.on("leave_room", async ({ code, name }) => {
       socket.leave(code);
       await handleLeave(io, code, name);

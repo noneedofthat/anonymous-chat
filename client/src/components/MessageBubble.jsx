@@ -25,6 +25,13 @@ const EditIcon = () => (
   </svg>
 );
 
+const PinIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+    <path d="M12 17v5"/>
+    <path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V16a1 1 0 001 1h12a1 1 0 001-1v-.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V7a1 1 0 011-1 2 2 0 000-4H8a2 2 0 000 4 1 1 0 011 1z"/>
+  </svg>
+);
+
 const TrashIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
@@ -44,7 +51,7 @@ const CopyIcon = () => (
   </svg>
 );
 
-export default function MessageBubble({ msg, myName, onReact, onDelete, onReply, onEdit, polls }) {
+export default function MessageBubble({ msg, myName, onReact, onDelete, onReply, onEdit, onPin, onUnpin, polls, isHost, isPinned }) {
   const [showActions, setShowActions] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const isMe = msg.sender === myName;
@@ -120,12 +127,21 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
 
   return (
     <div
-      className={`bubble-wrap ${isMe ? "me" : "other"}`}
+      className={`bubble-wrap ${isMe ? "me" : "other"} ${isPinned ? "pinned" : ""}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
       data-msg-id={msg.id}
     >
       {!isMe && <span className="sender-name">{msg.sender}</span>}
+      {isPinned && (
+        <div className="pinned-badge">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10">
+            <path d="M12 17v5"/>
+            <path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V16a1 1 0 001 1h12a1 1 0 001-1v-.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V7a1 1 0 011-1 2 2 0 000-4H8a2 2 0 000 4 1 1 0 011 1z"/>
+          </svg>
+          Pinned
+        </div>
+      )}
 
       {/* Reply context */}
       {msg.replyTo && (
@@ -154,6 +170,15 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
             {msg.type === "text" && (
               <button className="action-icon" title="Copy" onClick={handleCopy}>
                 <CopyIcon />
+              </button>
+            )}
+            {isHost && msg.type === "text" && (
+              <button 
+                className="action-icon" 
+                title={isPinned ? "Unpin" : "Pin"} 
+                onClick={() => isPinned ? onUnpin(msg.id) : onPin(msg.id)}
+              >
+                <PinIcon />
               </button>
             )}
             {isMe && msg.type === "text" && (

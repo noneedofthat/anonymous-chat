@@ -30,6 +30,7 @@ const roomSchema = new mongoose.Schema({
   members: [String],
   messages: [messageSchema],
   polls: [pollSchema],
+  pinnedMessages: [String], // Array of message IDs
   expiresAt: { type: Date, required: true, index: { expires: 0 } },
   createdAt: { type: Date, default: Date.now },
 });

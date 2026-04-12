@@ -461,3 +461,43 @@
   0%, 100% { transform: scale(1); opacity: 0.9; }
   50% { transform: scale(1.05); opacity: 1; }
 }
+
+/* Member list with kick button */
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.kick-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--danger);
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.member-item:hover .kick-btn {
+  opacity: 1;
+}
+
+.kick-btn:hover {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
