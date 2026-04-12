@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import "./Home.css";
 
 export default function Home() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("join"); // join | create
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState("join");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
@@ -14,6 +15,15 @@ export default function Home() {
   const [usePassword, setUsePassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Pre-fill room code from URL if present
+  useEffect(() => {
+    const joinCode = searchParams.get("join");
+    if (joinCode) {
+      setCode(joinCode.toUpperCase());
+      setTab("join");
+    }
+  }, [searchParams]);
 
   const handleJoin = async () => {
     if (!name.trim() || !code.trim()) return setError("Name and room code required.");
