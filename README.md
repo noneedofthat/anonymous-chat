@@ -39,16 +39,24 @@ When everyone leaves, the room is gone. No accounts. No history. No trace.
 | Real-time Chat | Instant messaging powered by Socket.io WebSockets |
 | Ephemeral Rooms | Rooms auto-delete when the timer expires or all members leave |
 | Anonymous | No signup, no accounts — just a name and a room code |
+| Markdown Support | Bold, italic, underline, inline code, and code blocks with syntax highlighting |
+| Message Editing | Edit your own messages with "edited" tag |
+| Message Search | Search messages with Ctrl+F, navigate results with arrows |
 | Live Polls | Create polls inside rooms with real-time vote updates |
 | Reactions | React to messages with 6 emoji reactions |
-| Reply Threading | Quote and reply to specific messages |
-| Image Sharing | Share images directly in the chat |
+| Reply Threading | Quote and reply to specific messages, click to jump to original |
+| Pin Messages | Host can pin important messages to top ribbon |
+| Mentions | Type @ to autocomplete member names with dropdown |
+| Image Sharing | Drag & drop, paste (Ctrl+V), or upload multiple images with preview |
+| File Sharing | Share PDFs, documents, and files up to 10MB |
 | Typing Indicators | See when others are typing in real-time |
 | Toast Notifications | Join/leave/copy alerts with subtle sound notifications |
 | Delete Messages | Delete your own messages for everyone |
+| Admin Controls | Host can kick users from the room |
+| Export Chat | Export chat history as JSON or TXT before room expires |
 | Password Rooms | Optional password protection for private rooms |
 | Copy Room Code | One-click copy with toast confirmation |
-| Share Link | Shareable direct room link |
+| Share Link | Shareable direct room link with pre-filled code |
 | Mobile Responsive | Works on all screen sizes |
 
 ---
@@ -62,17 +70,20 @@ When everyone leaves, the room is gone. No accounts. No history. No trace.
 - Socket.io Client — Real-time communication
 - Web Crypto API — AES-GCM encryption (built-in browser API, no dependencies)
 - Axios — HTTP client
+- React Markdown — Markdown rendering with GFM support
+- Rehype Highlight — Syntax highlighting for code blocks
 
 **Backend**
 - Node.js + Express — REST API server
 - Socket.io — WebSocket server
 - Mongoose — MongoDB ODM
 - Multer — File uploads
+- Cloudinary — Cloud storage for images and files
 - UUID — Room code generation
 
 **Database**
 - MongoDB Atlas — Cloud NoSQL database with TTL indexes for auto-expiring rooms
-- Cloudinary — Cloud image storage for shared images
+- Cloudinary — Cloud image and file storage for shared images
 
 ---
 
@@ -82,31 +93,82 @@ When everyone leaves, the room is gone. No accounts. No history. No trace.
 Anonymous-Chat/
 ├── server/
 │   ├── models/
-│   │   └── Room.js             # MongoDB schema (rooms, messages, polls)
+│   │   └── Room.js             # MongoDB schema (rooms, messages, polls, pinned)
 │   ├── routes/
-│   │   └── rooms.js            # REST API routes
+│   │   └── rooms.js            # REST API routes (create, join, upload)
 │   ├── socket/
-│   │   └── handler.js          # Socket.io event handlers
+│   │   └── handler.js          # Socket.io events (messages, reactions, pins, kicks)
 │   ├── index.js                # Server entry point
 │   └── package.json
 │
 └── client/
     └── src/
         ├── components/
-        │   ├── MessageBubble.jsx
-        │   ├── PollCard.jsx
-        │   ├── PollModal.jsx
-        │   ├── Toast.jsx
-        │   └── TypingIndicator.jsx
+        │   ├── MessageBubble.jsx    # Chat message with reactions, reply, edit, pin
+        │   ├── PollCard.jsx         # Poll display with live vote bars
+        │   ├── PollModal.jsx        # Poll creation modal
+        │   ├── Toast.jsx            # Toast notification system
+        │   ├── TypingIndicator.jsx  # Animated typing indicator
+        │   ├── ImagePreview.jsx     # Multi-image preview with navigation
+        │   ├── EditModal.jsx        # Message editing modal
+        │   ├── SearchBar.jsx        # Message search with navigation
+        │   ├── PinnedMessagesBar.jsx # Pinned messages ribbon
+        │   └── MentionDropdown.jsx  # @mention autocomplete
         ├── hooks/
-        │   ├── useCrypto.js
-        │   ├── useSocket.js
-        │   └── useToast.js
+        │   ├── useCrypto.js         # AES-GCM encryption utilities
+        │   ├── useSocket.js         # Socket.io connection hook
+        │   └── useToast.js          # Toast state management
         ├── pages/
-        │   ├── Home.jsx
-        │   └── Room.jsx
-        └── App.jsx
+        │   ├── Home.jsx             # Create / Join room page
+        │   └── Room.jsx             # Main chat room
+        └── App.jsx                  # Router setup
 ```
+
+---
+
+## Key Features Explained
+
+### Drag & Drop / Paste Images
+- Drag images from desktop directly into chat
+- Copy image (Ctrl+C) and paste (Ctrl+V) in chat
+- Select multiple images at once
+- Preview modal with navigation before sending
+
+### Markdown & Code
+- Use `**bold**`, `*italic*`, `<u>underline</u>`
+- Inline code with backticks: `` `code` ``
+- Code blocks with syntax highlighting using triple backticks
+- Supports GitHub Flavored Markdown
+
+### Message Management
+- Edit your own messages (shows "edited" tag)
+- Delete messages for everyone
+- Search messages with Ctrl+F
+- Click reply context to jump to original message
+
+### Pinned Messages
+- Host can pin important messages
+- Pinned messages appear in top ribbon
+- Navigate multiple pinned messages with arrows
+- Click pinned message to jump to it in chat
+
+### Mentions
+- Type @ to see member list dropdown
+- Filter by typing name after @
+- Use arrow keys to navigate, Enter to select
+- Mentions highlighted in messages
+
+### Admin Controls
+- Host can kick users from room
+- Kicked users see notification and redirect
+- Host can pin/unpin messages
+- Export chat history before room expires
+
+### File Sharing
+- Upload images, PDFs, documents, ZIP files
+- Files up to 10MB supported
+- Stored in Cloudinary (auto-delete with room)
+- Click file messages to download
 
 ---
 
