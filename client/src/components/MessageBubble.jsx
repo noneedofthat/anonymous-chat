@@ -101,7 +101,7 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
 
   return (
     <div
-      className={`bubble-wrap ${isMe ? "me" : "other"} ${msg.replyTo ? "has-reply" : ""}`}
+      className={`bubble-wrap ${isMe ? "me" : "other"}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
       data-msg-id={msg.id}

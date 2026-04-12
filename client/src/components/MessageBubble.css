@@ -4,11 +4,7 @@
   max-width: 70%;
   margin-bottom: 16px;
   position: relative;
-  padding-top: 0;
-}
-
-.bubble-wrap.has-reply {
-  padding-top: 42px; /* Space for action bar only when there's a reply */
+  padding-top: 42px; /* Always reserve space for action bar */
 }
 
 .bubble-wrap.me { align-self: flex-end; align-items: flex-end; }
