@@ -246,7 +246,30 @@ VITE_SERVER_URL=https://your-backend.up.railway.app
 4. Messages are decrypted locally in your browser using the same derived key
 5. The `E2E` badge in the header confirms encryption is active
 
-> Since the key is derived from the room code, anyone with the room code can decrypt messages. For a stronger model, asymmetric per-user keys would be required.
+### What IS Encrypted
+
+- **Text messages**: All chat messages are encrypted end-to-end
+- **Edited messages**: Re-encrypted when edited
+- **Reply context**: The quoted text in replies is encrypted
+
+### What is NOT Encrypted
+
+- **Images and files**: Stored in Cloudinary as plaintext (visible to Cloudinary)
+- **Polls**: Poll questions, options, and votes are sent as plaintext
+- **Metadata**: Sender names, timestamps, reactions, member lists are visible to the server
+- **Room information**: Room name, code, host, creation time are stored in plaintext
+
+### Security Considerations
+
+Since the encryption key is derived from the room code, **anyone with the room code can decrypt messages**. This is suitable for temporary, ephemeral conversations but not for high-security communications.
+
+For stronger security, asymmetric encryption with per-user key pairs would be required, which is beyond the scope of this project.
+
+The server operator (Railway/MongoDB Atlas) can see:
+- Who is in which room
+- When messages are sent
+- File uploads and poll data
+- All metadata except message content
 
 ---
 
