@@ -45,6 +45,16 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
     if (msg.text) navigator.clipboard.writeText(msg.text);
   };
 
+  const handleReplyClick = () => {
+    if (!msg.replyTo?.id) return;
+    const targetMsg = document.querySelector(`[data-msg-id="${msg.replyTo.id}"]`);
+    if (targetMsg) {
+      targetMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetMsg.style.animation = "highlightFlash 1s ease";
+      setTimeout(() => { targetMsg.style.animation = ""; }, 1000);
+    }
+  };
+
   // Inline poll
   if (msg.type === "poll" && msg.pollId) {
     const poll = polls?.find(p => p.id === msg.pollId);
@@ -91,15 +101,20 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
 
   return (
     <div
-      className={`bubble-wrap ${isMe ? "me" : "other"}`}
+      className={`bubble-wrap ${isMe ? "me" : "other"} ${msg.replyTo ? "has-reply" : ""}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
+      data-msg-id={msg.id}
     >
       {!isMe && <span className="sender-name">{msg.sender}</span>}
 
       {/* Reply context */}
       {msg.replyTo && (
-        <div className={`reply-context ${isMe ? "reply-me" : ""}`}>
+        <div 
+          className={`reply-context ${isMe ? "reply-me" : ""}`}
+          onClick={handleReplyClick}
+          title="Click to jump to original message"
+        >
           <span className="reply-ctx-sender">{msg.replyTo.sender}</span>
           <span className="reply-ctx-text">{msg.replyTo.text?.substring(0, 80)}</span>
         </div>
