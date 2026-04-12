@@ -2,6 +2,7 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/github-dark.css";
 import EditModal from "./EditModal";
 import "./MessageBubble.css";
@@ -175,7 +176,7 @@ export default function MessageBubble({ msg, myName, onReact, onDelete, onReply,
               <div className="msg-text">
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]} 
-                  rehypePlugins={[rehypeHighlight]}
+                  rehypePlugins={[rehypeRaw, rehypeHighlight]}
                   components={{
                     code: ({node, inline, ...props}) => 
                       inline ? <code className="inline-code" {...props} /> : <code {...props} />
