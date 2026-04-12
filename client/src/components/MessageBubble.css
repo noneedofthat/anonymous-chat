@@ -4,7 +4,7 @@
   max-width: 70%;
   margin-bottom: 16px;
   position: relative;
-  padding-top: 0;
+  padding-top: 42px; /* Space for action bar */
 }
 
 .bubble-wrap.me { align-self: flex-end; align-items: flex-end; }
@@ -24,8 +24,6 @@
   position: relative;
 }
 
-
-
 .action-bar {
   position: absolute;
   top: -38px;
@@ -40,6 +38,14 @@
   align-items: center;
   z-index: 20;
   white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.bubble-wrap:hover .action-bar {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .action-icon {
