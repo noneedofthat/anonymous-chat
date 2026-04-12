@@ -11,6 +11,8 @@ import Toast from "../components/Toast";
 import TypingIndicator from "../components/TypingIndicator";
 import ImagePreview from "../components/ImagePreview";
 import SearchBar from "../components/SearchBar";
+import PinnedMessagesBar from "../components/PinnedMessagesBar";
+import MentionDropdown from "../components/MentionDropdown";
 import "./Room.css";
 
 // Subtle notification sound using Web Audio API
@@ -53,6 +55,8 @@ export default function Room() {
   const [isDragging, setIsDragging] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [pinnedMessages, setPinnedMessages] = useState([]);
+  const [mentionQuery, setMentionQuery] = useState(null);
+  const [mentionPosition, setMentionPosition] = useState({ bottom: 0, left: 0 });
 
   const messagesEndRef = useRef(null);
   const messagesAreaRef = useRef(null);
@@ -243,9 +247,39 @@ export default function Room() {
 
   // Auto-resize textarea
   const handleTextChange = (e) => {
-    setText(e.target.value);
+    const newText = e.target.value;
+    setText(newText);
     const ta = textareaRef.current;
     if (ta) { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 120) + "px"; }
+
+    // Detect @mention
+    const cursorPos = ta.selectionStart;
+    const textBeforeCursor = newText.substring(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+    
+    if (lastAtIndex !== -1 && lastAtIndex === textBeforeCursor.length - 1) {
+      // Just typed @
+      const rect = ta.getBoundingClientRect();
+      setMentionPosition({ 
+        bottom: window.innerHeight - rect.top + 10, 
+        left: rect.left 
+      });
+      setMentionQuery("");
+    } else if (lastAtIndex !== -1) {
+      const afterAt = textBeforeCursor.substring(lastAtIndex + 1);
+      if (/^\w*$/.test(afterAt) && !afterAt.includes(" ")) {
+        const rect = ta.getBoundingClientRect();
+        setMentionPosition({ 
+          bottom: window.innerHeight - rect.top + 10, 
+          left: rect.left 
+        });
+        setMentionQuery(afterAt);
+      } else {
+        setMentionQuery(null);
+      }
+    } else {
+      setMentionQuery(null);
+    }
 
     // Typing indicator
     if (!isTypingRef.current) {
@@ -257,6 +291,29 @@ export default function Room() {
       isTypingRef.current = false;
       socket.emit("typing", { code, name: myName, typing: false });
     }, 1500);
+  };
+
+  const handleMentionSelect = (member) => {
+    if (!member) {
+      setMentionQuery(null);
+      return;
+    }
+
+    const ta = textareaRef.current;
+    const cursorPos = ta.selectionStart;
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+    const textAfterCursor = text.substring(cursorPos);
+    
+    const newText = text.substring(0, lastAtIndex + 1) + member + " " + textAfterCursor;
+    setText(newText);
+    setMentionQuery(null);
+    
+    setTimeout(() => {
+      const newCursorPos = lastAtIndex + member.length + 2;
+      ta.setSelectionRange(newCursorPos, newCursorPos);
+      ta.focus();
+    }, 0);
   };
 
   // Detect @mentions in text
@@ -544,6 +601,14 @@ export default function Room() {
         />
       )}
 
+      <PinnedMessagesBar 
+        pinnedMessages={pinnedMessages}
+        messages={messages}
+        onJumpTo={handleSearchResult}
+        onUnpin={handleUnpin}
+        isHost={room?.host === myName}
+      />
+
       <div className="room-body">
         <main className="messages-area" ref={messagesAreaRef} onScroll={handleScroll}>
           {messages.length === 0 && (
@@ -622,6 +687,15 @@ export default function Room() {
       </div>
 
       <footer className="input-area">
+        {mentionQuery !== null && (
+          <MentionDropdown 
+            members={members.filter(m => m !== myName)}
+            query={mentionQuery}
+            onSelect={handleMentionSelect}
+            position={mentionPosition}
+          />
+        )}
+        
         {replyTo && (
           <div className="reply-bar">
             <div className="reply-preview">
