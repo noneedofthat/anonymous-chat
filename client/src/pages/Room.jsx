@@ -133,9 +133,10 @@ export default function Room() {
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
     });
 
-    socket.on("message_edited", ({ messageId, newText, editedAt }) => {
+    socket.on("message_edited", async ({ messageId, newText, editedAt }) => {
+      const decrypted = cryptoKeyRef.current ? await decryptText(cryptoKeyRef.current, newText) : newText;
       setMessages((prev) => prev.map((m) => 
-        m.id === messageId ? { ...m, text: newText, edited: true, editedAt } : m
+        m.id === messageId ? { ...m, text: decrypted, edited: true, editedAt } : m
       ));
     });
 
