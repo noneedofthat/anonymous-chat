@@ -628,7 +628,16 @@ export default function Room() {
         <div className="header-left">
           <svg className="logo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" width="22" height="22"><path d="M12 2C9 7 6 9 6 13a6 6 0 0012 0c0-4-3-6-6-11z"/></svg>
           <div>
-            <button className="room-name-btn" onClick={() => setShowRoomInfo(!showRoomInfo)}>{room.name}</button>
+            <div className="room-name-row">
+              <span className="room-name">{room.name}</span>
+              <button className="room-menu-btn" onClick={() => setShowRoomInfo(!showRoomInfo)} title="Room options">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <circle cx="12" cy="12" r="1"/>
+                  <circle cx="12" cy="5" r="1"/>
+                  <circle cx="12" cy="19" r="1"/>
+                </svg>
+              </button>
+            </div>
             <button className="room-code" onClick={copyCode} title="Click to copy">
               {code}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="10" height="10"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>

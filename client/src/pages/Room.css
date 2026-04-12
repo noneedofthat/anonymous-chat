@@ -20,24 +20,43 @@
 .header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .logo-icon { flex-shrink: 0; }
 
-.room-name-btn {
-  background: none;
-  border: none;
+.room-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.room-name {
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 700;
   color: var(--text);
-  cursor: pointer;
-  padding: 0;
-  display: block;
-  text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 160px;
-  transition: color 0.15s;
 }
-.room-name-btn:hover { color: var(--accent); }
+
+.room-menu-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.room-menu-btn:hover {
+  background: var(--surface2);
+  color: var(--accent);
+  border-color: var(--accent);
+}
 
 .room-code {
   background: none;
@@ -356,7 +375,7 @@
   .room-header { padding: 10px 14px; }
   .timer { display: none; }
   .enc-badge { display: none; }
-  .room-name-btn { max-width: 120px; font-size: 14px; }
+  .room-name { max-width: 120px; font-size: 14px; }
   .messages-area { padding: 12px 12px 8px; }
   .input-row { padding: 10px 12px; }
   .sidebar {
